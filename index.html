@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>WOLFLIX: Pluribus Assessment</title>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            /* Fundo escuro e confortável para fotofobia */
+            background-color: #0f172a;
+            display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0;
+            font-family: 'Outfit', sans-serif; user-select: none; -webkit-tap-highlight-color: transparent;
+            background-image: radial-gradient(circle at center, rgba(202, 138, 4, 0.05) 0%, transparent 70%);
+        }
+
+        #mobile-container {
+            width: 100%; max-width: 450px; height: 100dvh; max-height: 900px;
+            background-color: #0f172a; position: relative; overflow: hidden;
+            display: flex; flex-direction: column; box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
+        }
+
+        @media (min-width: 480px) { 
+            #mobile-container { 
+                height: 90vh; border-radius: 1.5rem; border: 2px solid #334155; border-top: 6px solid #ca8a04; 
+            } 
+        }
+
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        .screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; background-color: #0f172a; transform: translateX(100%); transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1); z-index: 10; }
+        .screen.active { transform: translateX(0); z-index: 20; }
+        .screen.previous { transform: translateX(-100%); z-index: 10; }
+
+        /* Option Buttons */
+        .option-btn {
+            background-color: rgba(255, 255, 255, 0.05); border: 2px solid #334155; color: #f8fafc;
+            transition: all 0.2s ease; position: relative; text-align: left; padding: 1.25rem; border-radius: 0.5rem; width: 100%; font-weight: 700; font-size: 1rem;
+        }
+        .option-btn:hover { border-color: #ca8a04; background-color: rgba(202, 138, 4, 0.1); }
+        .option-btn.selected { border-color: #eab308; background-color: rgba(234, 179, 8, 0.15); color: #fde047; box-shadow: 0 0 15px rgba(234, 179, 8, 0.2); }
+        .option-btn.correct { border-color: #10b981; color: #10b981; background-color: rgba(16,185,129,0.1); }
+        .option-btn.wrong { border-color: #ef4444; color: #ef4444; background-color: rgba(239, 68, 68, 0.1); }
+
+        .hive-btn {
+            background: #ca8a04; color: #000; font-weight: 900; text-transform: uppercase; letter-spacing: 2px; transition: all 0.2s;
+            width: 100%; padding: 1.25rem; border-radius: 0.5rem; border: none; font-size: 1.1rem;
+        }
+        .hive-btn:hover:not(:disabled) { background: #eab308; transform: translateY(-2px); box-shadow: 0 10px 20px rgba(202, 138, 4, 0.3); }
+        .hive-btn:disabled { background: #334155; color: #64748b; box-shadow: none; cursor: not-allowed; transform: none; }
+    </style>
+</head>
+<body>
+
+    <!-- DEVICE CONTAINER -->
+    <div id="mobile-container">
+        <!-- STATUS BAR -->
+        <div class="h-8 bg-black text-[#ca8a04] flex justify-between items-center px-4 text-[10px] font-bold z-50 shrink-0 border-b border-[#334155]">
+            <span>SYSTEM: PLURIBUS</span>
+            <div class="flex gap-2 items-center"><span>CONNECTION STABLE</span><span class="animate-pulse">😊</span></div>
+        </div>
+
+        <!-- SCREEN 1: LOGIN -->
+        <div id="screen-login" class="screen active flex items-center justify-center p-8 text-center bg-[#0f172a]">
+            <div class="z-10 w-full flex flex-col items-center bg-[#1e293b] p-8 rounded-2xl border border-[#334155] shadow-2xl">
+                <span class="text-7xl mb-4 opacity-90 drop-shadow-[0_0_15px_rgba(202,138,4,0.5)]">😊</span>
+                <h2 class="text-xs tracking-[0.2em] text-[#ca8a04] mb-2 uppercase font-bold">Assessment</h2>
+                <h1 class="text-4xl font-black tracking-tight mb-6 text-white uppercase drop-shadow-sm">Join Us</h1>
+                <p class="text-base text-gray-400 mb-10 leading-relaxed font-medium">
+                    "Prove you understand our world. Answer the questions about Comparatives, Superlatives, and Opinions."
+                </p>
+                <button onclick="startQuiz()" class="hive-btn">CONNECT NOW</button>
+            </div>
+        </div>
+
+        <!-- SCREEN 2: QUIZ -->
+        <div id="screen-quiz" class="screen flex flex-col">
+            <header class="bg-[#020617] border-b border-[#334155] p-4 shrink-0 flex items-center justify-between z-20">
+                <div class="flex items-center gap-3">
+                    <span class="text-white text-lg">📝</span>
+                    <span class="font-bold uppercase tracking-widest text-[10px] text-gray-400" id="q-category">Grammar</span>
+                </div>
+                <span class="font-black text-xs text-[#020617] bg-[#ca8a04] px-3 py-1 rounded-full" id="q-counter">1/15</span>
+            </header>
+
+            <div class="w-full h-1.5 bg-[#0f172a] shrink-0"><div id="progress-bar" class="h-full bg-[#ca8a04] shadow-[0_0_10px_#ca8a04] transition-all duration-300" style="width: 0%;"></div></div>
+
+            <div class="flex-1 overflow-y-auto no-scrollbar p-6 flex flex-col relative">
+                <div class="bg-black/30 p-6 rounded-lg border border-[#334155] mb-8 border-l-4 border-l-[#ca8a04]">
+                    <h2 id="q-text" class="text-lg font-bold text-white leading-relaxed">Question goes here?</h2>
+                </div>
+                <div id="options-container" class="flex flex-col gap-4 mb-8"></div>
+                <div class="flex-1"></div>
+                <div id="feedback-area" class="hidden mb-6 p-4 text-sm font-bold rounded-lg border"></div>
+            </div>
+
+            <div class="p-4 bg-[#020617] border-t border-[#334155] shrink-0">
+                <button id="btn-next" onclick="handleNext()" disabled class="hive-btn">CONFIRM</button>
+            </div>
+        </div>
+
+        <!-- SCREEN 3: RESULTS -->
+        <div id="screen-results" class="screen flex flex-col relative overflow-hidden bg-[#0f172a]">
+            <header class="bg-black/50 p-4 shrink-0 text-center border-b border-[#334155] z-10">
+                <span class="font-bold uppercase tracking-widest text-xs text-gray-400">STATUS REPORT</span>
+            </header>
+
+            <div class="flex-1 flex flex-col items-center justify-center p-8 text-center z-10 relative">
+                <div id="result-icon" class="text-8xl mb-6 relative z-10 drop-shadow-[0_0_20px_rgba(202,138,4,0.3)]">🌍</div>
+                <h1 id="result-title" class="text-4xl font-black text-white uppercase tracking-tight mb-2 relative z-10">Title</h1>
+                <p id="result-subtitle" class="text-sm font-bold text-gray-400 mb-8 uppercase tracking-widest relative z-10">
+                    Score: <span id="final-score" class="text-[#ca8a04] text-lg">15</span> / 15
+                </p>
+                <div class="w-full bg-[#1e293b] p-6 border border-[#334155] rounded-xl mb-10 relative z-10 border-t-4 border-t-[#ca8a04]">
+                    <p id="result-msg" class="text-base text-gray-300 leading-relaxed font-medium">"Message goes here."</p>
+                </div>
+                <button onclick="restartApp()" class="w-full hive-btn text-sm py-4 relative z-10">RECONNECT</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const questions = [
+            // CATEGORY 1: COMPARATIVES
+            { category: "Grammar: Comparatives", question: "If you compare Carol and her friend, you say: Carol is _______ than her friend.", options: ["sad", "sadder", "the saddest"], correctIndex: 1, explanation: "We use 'sadder' to compare two people." },
+            { category: "Grammar: Comparatives", question: "The happy people think their life is _______ than before.", options: ["gooder", "more good", "better"], correctIndex: 2, explanation: "The comparative of 'good' is 'better'." },
+            { category: "Grammar: Comparatives", question: "Carol feels _______ than everyone else.", options: ["more miserable", "miserabler", "most miserable"], correctIndex: 0, explanation: "'Miserable' is a long word, so we use 'more miserable'." },
+            { category: "Grammar: Comparatives", question: "Choose the correct sentence:", options: ["Happiness is more important than freedom.", "Happiness is most important than freedom.", "Happiness is important than freedom."], correctIndex: 0, explanation: "We use 'more important' for long words when comparing." },
+            // CATEGORY 2: SUPERLATIVES
+            { category: "Grammar: Superlatives", question: "Carol is the number one miserable person. She is _______ person on Earth.", options: ["the more miserable", "the most miserable", "most miserable"], correctIndex: 1, explanation: "We use 'the most' for the maximum in a group for long words." },
+            { category: "Grammar: Superlatives", question: "The happy people think this is _______ day of their lives.", options: ["the best", "the better", "the goodest"], correctIndex: 0, explanation: "The superlative of 'good' is 'the best'." },
+            { category: "Grammar: Superlatives", question: "This is _______ virus in the world.", options: ["the badest", "the worst", "the worse"], correctIndex: 1, explanation: "The superlative of 'bad' is 'the worst'." },
+            { category: "Grammar: Superlatives", question: "Choose the correct sentence:", options: ["They are the happiest people in the world.", "They are the happier people in the world.", "They are most happy people in the world."], correctIndex: 0, explanation: "We use 'the happiest' because 'happy' is a short word ending in 'y'." },
+            // CATEGORY 3: EXPRESSING OPINION
+            { category: "Expressing Opinion", question: "How do you give a simple opinion in English?", options: ["I think that...", "I thinking...", "I am think..."], correctIndex: 0, explanation: "We use 'I think' or 'I believe' to give an opinion." },
+            { category: "Expressing Opinion", question: "If you want to sound more formal or professional, you can say:", options: ["In my option...", "In my opinion...", "To my opinion..."], correctIndex: 1, explanation: "'In my opinion' is the correct expression." },
+            { category: "Expressing Opinion", question: "When you have two options (like happy or free) and you select one, you say:", options: ["I like more...", "I prefer...", "I am prefer..."], correctIndex: 1, explanation: "We use 'I prefer' to say we like one option more than another." },
+            { category: "Expressing Opinion", question: "Choose the correct sentence:", options: ["In my opinion, the trailer is scary.", "In my opinion, the trailer scary.", "For my opinion, the trailer is scary."], correctIndex: 0, explanation: "'In my opinion' must be followed by a complete sentence (subject + verb)." },
+            // CATEGORY 4: CONTEXT & VOCABULARY
+            { category: "Vocabulary", question: "What does it mean to be 'Immune'?", options: ["To be protected from a virus or disease.", "To be very angry.", "To be completely alone."], correctIndex: 0, explanation: "Immune means you cannot be infected by the virus." },
+            { category: "Vocabulary", question: "Which word means 'Very angry'?", options: ["Joyful", "Furious", "Lonely"], correctIndex: 1, explanation: "Furious is a strong adjective for extremely angry." },
+            { category: "Context", question: "What is 'Free Will'?", options: ["A free ticket to the movies.", "A virus that makes you happy.", "The ability to choose what you want to do in life."], correctIndex: 2, explanation: "Free will means you have the power to make your own decisions." }
+        ];
+
+        let currentQuestionIndex = 0; let score = 0; let hasAnswered = false; let selectedIdx = null;
+
+        function startQuiz() { currentQuestionIndex = 0; score = 0; switchScreen('screen-login', 'screen-quiz'); loadQuestion(); }
+
+        function switchScreen(oldId, newId) {
+            document.getElementById(oldId).classList.replace('active', 'previous');
+            const newScreen = document.getElementById(newId);
+            newScreen.classList.remove('previous'); newScreen.classList.add('active');
+        }
+
+        function loadQuestion() {
+            hasAnswered = false; selectedIdx = null; const q = questions[currentQuestionIndex];
+            document.getElementById('q-counter').innerText = `${currentQuestionIndex + 1}/15`;
+            document.getElementById('q-category').innerText = q.category;
+            document.getElementById('q-text').innerText = q.question;
+            document.getElementById('progress-bar').style.width = `${(currentQuestionIndex / 15) * 100}%`;
+            
+            const container = document.getElementById('options-container'); container.innerHTML = '';
+            q.options.forEach((opt, idx) => {
+                const btn = document.createElement('button'); btn.className = 'option-btn'; btn.innerText = opt;
+                btn.onclick = () => selectOption(idx, btn); container.appendChild(btn);
+            });
+
+            const nextBtn = document.getElementById('btn-next'); nextBtn.disabled = true; nextBtn.innerText = "CONFIRM";
+            document.getElementById('feedback-area').classList.add('hidden');
+        }
+
+        function selectOption(idx, btn) {
+            if(hasAnswered) return; selectedIdx = idx;
+            document.querySelectorAll('.option-btn').forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected'); document.getElementById('btn-next').disabled = false;
+        }
+
+        function handleNext() {
+            if(!hasAnswered) checkAnswer();
+            else { currentQuestionIndex++; if(currentQuestionIndex < 15) loadQuestion(); else finishQuiz(); }
+        }
+
+        function checkAnswer() {
+            hasAnswered = true; const q = questions[currentQuestionIndex];
+            const btns = document.querySelectorAll('.option-btn'); const fb = document.getElementById('feedback-area');
+            if(selectedIdx === q.correctIndex) {
+                score++; btns[selectedIdx].classList.add('correct');
+                fb.className = "mb-6 p-4 text-sm border border-green-500 text-green-400 bg-green-900/20 rounded-lg";
+                fb.innerHTML = "<strong class='uppercase tracking-widest mr-2'>TRUE:</strong> " + q.explanation;
+            } else {
+                btns[selectedIdx].classList.add('wrong'); btns[q.correctIndex].classList.add('correct');
+                fb.className = "mb-6 p-4 text-sm border border-red-500 text-red-400 bg-red-900/20 rounded-lg";
+                fb.innerHTML = "<strong class='uppercase tracking-widest mr-2'>FALSE:</strong> " + q.explanation;
+            }
+            fb.classList.remove('hidden');
+            document.getElementById('btn-next').innerText = currentQuestionIndex === 14 ? "SEE RESULTS" : "NEXT QUESTION";
+        }
+
+        function finishQuiz() {
+            switchScreen('screen-quiz', 'screen-results');
+            document.getElementById('final-score').innerText = score;
+            const titleEl = document.getElementById('result-title'); const iconEl = document.getElementById('result-icon'); const msgEl = document.getElementById('result-msg');
+            
+            if(score >= 13) {
+                titleEl.innerText = "Free Thinker"; iconEl.innerText = "🕊️"; titleEl.classList.add('text-blue-400');
+                msgEl.innerHTML = "Perfect! You understand Comparatives, Superlatives, and how to express your opinion. Your mind is safe.";
+            } else if(score >= 8) {
+                titleEl.innerText = "Almost Connected"; iconEl.innerText = "🤔"; titleEl.classList.add('text-gray-300');
+                msgEl.innerHTML = "Good job. You know the basics, but you need to practice your Comparatives before the Hive Mind finds you.";
+            } else {
+                titleEl.innerText = "Joined The Hive"; iconEl.innerText = "😊"; titleEl.classList.add('text-[#ca8a04]');
+                msgEl.innerHTML = "You failed the test. The virus got you. You must restart the lesson immediately to save your free will.";
+            }
+        }
+        function restartApp() { switchScreen('screen-results', 'screen-login'); }
+    </script>
+</body>
+</html>
